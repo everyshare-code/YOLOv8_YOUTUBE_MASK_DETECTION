@@ -1,6 +1,7 @@
 frontend/node_modules
 /dist
-
+/model
+/data
 
 # local env files
 .env.local

@@ -1,68 +1,80 @@
 import cv2
-import base64
 from ultralytics import YOLO
-import yt_dlp
-import os
-from threading import Event
-from io import BytesIO
 from pytube import YouTube
-
+from dotenv import load_dotenv
+import subprocess
+from threading import Thread
+from urllib.parse import quote
+load_dotenv()
+import os
 class YoutubeCap():
     def __init__(self):
         weights_filename = os.path.join('model', 'best.pt')
         self.model = YOLO(weights_filename)
-        self.stop_event = Event()
-        self.streaming=True
+        root_path = os.getenv('ROOT_PATH')
+        self.videos_path = os.path.join(root_path, 'data', 'videos')
 
-    def process_video_(self, url, socketio):
+    def download_video(self, videoId):
+        url=f'https://www.youtube.com/watch?v={videoId}'
         yt = YouTube(url)
-        video_stream = (yt.streams.filter(progressive=True, file_extension='mp4')
-                        .order_by('resolution').desc().first())
-        if video_stream is None:
-            print("유튜브 스트리밍 연결 실패")
-            return
-        video_url = video_stream.url
-        cap = cv2.VideoCapture(video_url)
-        while cap.isOpened():
-            ret, frame = cap.read()
-            print(ret)
-            if ret:
-                results = self.model.predict([frame], save=False)
-                narr = results[0].plot()
-                # 메모리에 이미지를 임시 저장하기 위한 BytesIO 객체 생성
-                _, buffer = cv2.imencode('.jpg', narr)
-                io_buf = BytesIO(buffer)
-                # Base64 문자열로 인코딩
-                base64_string = base64.b64encode(io_buf.getvalue()).decode('utf-8')
-                socketio.emit('frame', {'image': base64_string})
-            else:
-                break
-        cap.release()
-    def process_video(self,url,socketio):
-        with yt_dlp.YoutubeDL({'format': 'best'}) as ydl:
-            self.result = ydl.extract_info(url, download=False)
-            video_url = self.result['url']
-            cap = cv2.VideoCapture(video_url)
-            while cap.isOpened():
+        stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+        # title = stream.title
+        # safe_title = re.sub(r'[^a-zA-Z0-9가-힣]', '', title)  # a-z, A-Z, 0-9, 그리고 한글을 제외한 모든 문자를 제거
+        filename = f'{videoId}.mp4'
+        output_path = self.videos_path  # 저장될 경로 설정
+        stream.download(output_path=output_path, filename=filename)  # 파일 저장
+        full_path = os.path.join(output_path, filename)  # 전체 경로 반환
+        return full_path
+
+    def process_and_stream(self, video_path, playlist_path, videoId):
+        cap = cv2.VideoCapture(video_path)
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        segment_duration = 3  # seconds per segment
+        frames_per_segment = segment_duration * fps
+
+        with open(playlist_path, 'w') as playlist:
+            playlist.write('#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:3\n')
+
+        segment_count = 0
+
+        while True:
+            # segment_filename = f"{os.path.splitext(playlist_path)[-2]}_{segment_count}.ts"
+            segment_filename = f"{videoId}_{segment_count}.ts"
+            segment_path = os.path.join(self.videos_path, segment_filename)
+            command = ['ffmpeg', '-y', '-f', 'rawvideo', '-vcodec', 'rawvideo', '-pix_fmt', 'bgr24',
+                       '-s', f"{int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))}",
+                       '-r', str(fps), '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'fast', '-f',
+                       'mpegts', segment_path]
+            proc = subprocess.Popen(command, stdin=subprocess.PIPE)
+
+            frames_collected = 0
+            while frames_collected < frames_per_segment:
                 ret, frame = cap.read()
-                if ret:
-                    results=self.model.predict([frame],save=False)
-                    narr=results[0].plot()
-                    # 메모리에 이미지를 임시 저장하기 위한 BytesIO 객체 생성
-                    _, buffer = cv2.imencode('.jpg', narr)
-                    io_buf = BytesIO(buffer)
-                    # Base64 문자열로 인코딩
-                    base64_string = base64.b64encode(io_buf.getvalue()).decode('utf-8')
-                    socketio.emit('frame', {'image': base64_string})
-                else:
+                if not ret:
                     break
-            cap.release()
-    def stop_process(self,streaming):
-        self.stop_event.set()
-        self.streaming=streaming
+                frame = self.model.predict([frame], save=False)[0].plot()
+                proc.stdin.write(frame.tobytes())
+                frames_collected += 1
 
+            proc.stdin.close()
+            proc.wait()
 
-    def restart_process(self):
-        self.stop_event.clear()
+            if not ret:  # If no more frames, exit loop
+                break
+
+            with open(playlist_path, 'a') as playlist:
+                playlist.write(f'#EXTINF:3,\n{segment_filename}\n')
+            segment_count += 1
+
+        with open(playlist_path, 'a') as playlist:
+            playlist.write('#EXT-X-ENDLIST\n')
+        cap.release()
+
+    def stream_video(self, videoId):
+        video_path = self.download_video(videoId)
+        playlist_path = os.path.splitext(video_path)[0] + ".m3u8"
+        Thread(target=self.process_and_stream, args=(video_path, playlist_path, videoId)).start()
+        return quote(os.path.join('videos', os.path.basename(playlist_path)))
+
 
 
