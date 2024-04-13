@@ -1,7 +1,10 @@
 frontend/node_modules
 /dist
-/model/best.pt
 /data
+/model_train/datasets
+/model_train/runs/detect/train/weights
+/model_train/runs/detect/.ipynb_checkpoints
+/model_train/yolov8s.pt
 # local env files
 .env.local
 .env.*.local

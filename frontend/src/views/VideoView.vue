@@ -6,6 +6,7 @@
           placeholder="YouTube URL을 입력하세요">
           <a class="btn btn-primary" role="button" @click.prevent="searchVideos">검색</a>
       </div>
+      <LoadingModal v-if="modal"/>
       <div v-if="selectVideo" class="video-layout-container">
         <VideoLayout :videoPath="videoPath" @stop="stop"/>
       </div>
@@ -17,10 +18,12 @@ import { ref } from 'vue'
 import axios from 'axios'
 import VideoLayout from '@/components/VideoLayout.vue'
 import VideoList from '@/components/VideoList.vue'
+import LoadingModal from '@/components/LoadingModal.vue'
 const url = ref('')
 const selectVideo = ref(false)
 const videoPath = ref('')
 const videoList = ref([])
+
 function stop(){
     url.value=''
 }
@@ -42,11 +45,15 @@ const setVideoId= (videoId_)=>{
   videoId.value=videoId_
   sendToURL()
 }
+
+const modal=ref(false)
 const sendToURL= async()=>{
+  modal.value=true
   const response= await axios.post('http://localhost:5001/prepare_video',{videoId:videoId.value})
   if (response.status==200){
     const data=response.data
     if(data) {
+      modal.value=false
       selectVideo.value=true
       videoList.value=[]
       videoPath.value=`http://localhost:5001/${data['video_path']}`

@@ -9,7 +9,7 @@ load_dotenv()
 import os
 class YoutubeCap():
     def __init__(self):
-        weights_filename = os.path.join('model', 'best.pt')
+        weights_filename = os.path.join('model_train', 'runs', 'detect', 'train', 'weights', 'best.pt')
         self.model = YOLO(weights_filename)
         root_path = os.getenv('ROOT_PATH')
         self.videos_path = os.path.join(root_path, 'data', 'videos')
