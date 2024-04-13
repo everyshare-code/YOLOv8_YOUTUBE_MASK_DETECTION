@@ -1,8 +1,7 @@
 frontend/node_modules
 /dist
-/model
+/model/best.pt
 /data
-
 # local env files
 .env.local
 .env.*.local
