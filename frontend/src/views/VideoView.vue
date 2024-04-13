@@ -49,7 +49,9 @@ const setVideoId= (videoId_)=>{
 const modal=ref(false)
 const sendToURL= async()=>{
   modal.value=true
-  const response= await axios.post('http://localhost:5001/prepare_video',{videoId:videoId.value})
+  const response= await axios.post(
+    'http://localhost:5001/prepare_video',
+    {videoId:videoId.value})
   if (response.status==200){
     const data=response.data
     if(data) {

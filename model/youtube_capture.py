@@ -38,7 +38,6 @@ class YoutubeCap():
         segment_count = 0
 
         while True:
-            # segment_filename = f"{os.path.splitext(playlist_path)[-2]}_{segment_count}.ts"
             segment_filename = f"{videoId}_{segment_count}.ts"
             segment_path = os.path.join(self.videos_path, segment_filename)
             command = ['ffmpeg', '-y', '-f', 'rawvideo', '-vcodec', 'rawvideo', '-pix_fmt', 'bgr24',

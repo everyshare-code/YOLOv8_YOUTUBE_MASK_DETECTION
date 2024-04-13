@@ -29,14 +29,11 @@ onMounted(() => {
         switch(data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
             console.error('A network error occurred', data);
-            // try to recover network error
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
             console.error('A media error occurred', data);
-            // try to recover media error
             break;
           default:
-            // cannot recover
             hls.destroy();
             break;
         }
