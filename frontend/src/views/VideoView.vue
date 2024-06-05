@@ -3,7 +3,7 @@
       <h1>Mask Detection(YOLOv8)</h1>
       <div class="input-group">
           <input type="text" class="form-control" v-model="url" 
-          placeholder="YouTube URL을 입력하세요">
+          placeholder="검색어를 입력하세요">
           <a class="btn btn-primary" role="button" @click.prevent="searchVideos">검색</a>
       </div>
       <LoadingModal v-if="modal"/>

@@ -18,8 +18,6 @@ class YoutubeCap():
         url=f'https://www.youtube.com/watch?v={videoId}'
         yt = YouTube(url)
         stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
-        # title = stream.title
-        # safe_title = re.sub(r'[^a-zA-Z0-9가-힣]', '', title)  # a-z, A-Z, 0-9, 그리고 한글을 제외한 모든 문자를 제거
         filename = f'{videoId}.mp4'
         output_path = self.videos_path  # 저장될 경로 설정
         stream.download(output_path=output_path, filename=filename)  # 파일 저장
@@ -74,6 +72,3 @@ class YoutubeCap():
         playlist_path = os.path.splitext(video_path)[0] + ".m3u8"
         Thread(target=self.process_and_stream, args=(video_path, playlist_path, videoId)).start()
         return quote(os.path.join('videos', os.path.basename(playlist_path)))
-
-
-
