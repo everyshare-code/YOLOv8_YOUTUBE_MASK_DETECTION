@@ -61,7 +61,7 @@
 
 ### 모델 학습
 
-1. **YOLO 모델 다운로드 및 학습**:
+1. **YOLO 모델 다운로드**:
     ```python
     model = YOLO('yolov8s.pt')
     ```
@@ -110,7 +110,7 @@
         return len(segment_files) >= 3
     ```
 
-2. **비디오 준비**:
+2. **비디오 준비 및 스트리밍 파일 경로 전달**:
     ```python
     def prepare_video():
         video_id = request.json.get('videoId')
@@ -124,6 +124,52 @@
             return jsonify({"video_path": playlist_path})
         else:
             return jsonify({"error": "비디오가 아직 준비되지 않았습니다."}), 202
+    ```
+
+3. **캡처 및 세그먼트 생성**:
+    ```python
+        def process_and_stream(self, video_path, playlist_path, videoId):
+            cap = cv2.VideoCapture(video_path)
+            fps = int(cap.get(cv2.CAP_PROP_FPS))
+            segment_duration = 3  # seconds per segment
+            frames_per_segment = segment_duration * fps
+    
+            with open(playlist_path, 'w') as playlist:
+                playlist.write('#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:3\n')
+    
+            segment_count = 0
+    
+            while True:
+                segment_filename = f"{videoId}_{segment_count}.ts"
+                segment_path = os.path.join(self.videos_path, segment_filename)
+                command = ['ffmpeg', '-y', '-f', 'rawvideo', '-vcodec', 'rawvideo', '-pix_fmt', 'bgr24',
+                           '-s', f"{int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))}",
+                           '-r', str(fps), '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'fast', '-f',
+                           'mpegts', segment_path]
+                proc = subprocess.Popen(command, stdin=subprocess.PIPE)
+    
+                frames_collected = 0
+                while frames_collected < frames_per_segment:
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+                    frame = self.model.predict([frame], save=False)[0].plot()
+                    proc.stdin.write(frame.tobytes())
+                    frames_collected += 1
+    
+                proc.stdin.close()
+                proc.wait()
+    
+                if not ret:  # If no more frames, exit loop
+                    break
+    
+                with open(playlist_path, 'a') as playlist:
+                    playlist.write(f'#EXTINF:3,\n{segment_filename}\n')
+                segment_count += 1
+    
+            with open(playlist_path, 'a') as playlist:
+                playlist.write('#EXT-X-ENDLIST\n')
+            cap.release()
     ```
 
 ## 실행 방법
