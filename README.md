@@ -5,7 +5,8 @@
 
 ## 파일 구조
 
-- `app.py`: 비디오 스트리밍 및 세그먼트 준비 상태를 확인하는 함수가 포함된 파일.
+- `youtube_capture.py`: 유튜브 영상을 다운 받고 마스크 감지를 통해 세그먼트를 생성하는 서비스 로직.
+- `app.py`: Flask를 통해서 클라이언트의 요청을 받고 응답을 해주는 파일.
 - `main.py`: Flask 앱을 ASGI 앱으로 변환하고 실행하는 파일.
 - `model_train/YOLOv8_MASK_DETECT.ipynb`: 데이터 전처리, 모델 학습 및 예측을 수행하는 Jupyter 노트북.
 
