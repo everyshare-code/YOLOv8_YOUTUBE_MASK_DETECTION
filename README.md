@@ -192,4 +192,4 @@
 ## 참고 자료
 
 - [YOLOv5 GitHub Repository](https://github.com/ultralytics/yolov5)
-- [PASCAL VOC Dataset](http://host.robots.ox.ac.uk/pascal/VOC/)
+- [Face Mask Detection Dataset](https://www.kaggle.com/datasets/andrewmvd/face-mask-detection)
