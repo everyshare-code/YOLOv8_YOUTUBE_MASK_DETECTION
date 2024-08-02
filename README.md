@@ -191,5 +191,5 @@
 
 ## 참고 자료
 
-- [YOLOv5 GitHub Repository](https://github.com/ultralytics/yolov5)
+- [YOLOv8 GitHub Repository]((https://github.com/ultralytics/ultralytics.git))
 - [Face Mask Detection Dataset](https://www.kaggle.com/datasets/andrewmvd/face-mask-detection)
