@@ -1,6 +1,6 @@
 # 프로젝트 개요
 ![마스크 감지(마스크 미착용)](https://github.com/everyshare-code/YOLOv8_YOUTUBE_MASK_DETECTION/blob/main/temp.jpg)
-![마스크 감지(마스크 착용)](https://github.com/everyshare-code/YOLOv8_YOUTUBE_MASK_DETECTION/blob/main/temp1.png)
+![마스크 감지(마스크 착용)](https://github.com/everyshare-code/YOLOv8_YOUTUBE_MASK_DETECTION/blob/main/temp2.png)
 
 이 프로젝트는 YOLOv8 모델을 사용하여 마스크 착용 여부를 감지하는 시스템을 구축하는 것을 목표로 합니다. Python을 사용하여 데이터 전처리, 모델 학습, 예측 및 결과 시각화를 수행합니다. 또한, 비디오 스트리밍 기능을 포함하여 실시간으로 마스크 착용 여부를 감지할 수 있습니다.
 
